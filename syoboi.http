@@ -1,0 +1,7 @@
+GET http://cal.syoboi.jp/json.php?Req=
+###
+
+GET http://cal.syoboi.jp/db.php?Command=ProgLookup&Range=20210110_000000-20210111_000000
+
+###
+GET http://cal.syoboi.jp/db.php?Command=ChLookup

@@ -1,0 +1,55 @@
+{
+  "name": "mkmovielink",
+  "version": "1.0.0",
+  "main": "lib/index.js",
+  "repository": "https://github.com/hiroyuki-taka/mkmovielink.git",
+  "author": "taka-hiroyuki",
+  "license": "MIT",
+  "scripts": {
+    "posttest": "eslint . --ext .ts --config .eslintrc",
+    "prepack": "rimraf lib && tsc -b && oclif-dev readme",
+    "test": "nyc --extension .ts mocha --forbid-only \"test/**/*.test.ts\"",
+    "version": "oclif-dev readme && git add README.md"
+  },
+  "dependencies": {
+    "@oclif/command": "^1",
+    "@oclif/config": "^1",
+    "@oclif/plugin-help": "^3",
+    "axios": "^0.21.1",
+    "moment": "^2.29.1",
+    "rxjs": "^6.6.3",
+    "tslib": "^1",
+    "xml-js": "^1.6.11"
+  },
+  "devDependencies": {
+    "@oclif/dev-cli": "^1",
+    "@oclif/test": "^1",
+    "@types/chai": "^4",
+    "@types/mocha": "^5",
+    "@types/node": "^10",
+    "chai": "^4",
+    "eslint": "^5.13",
+    "eslint-config-oclif": "^3.1",
+    "eslint-config-oclif-typescript": "^0.1",
+    "mocha": "^5",
+    "nyc": "^14",
+    "oclif": "^1.16.1",
+    "rimraf": "^3.0.2",
+    "ts-node": "^8",
+    "typescript": "^3.3"
+  },
+  "engines": {
+    "node": ">=8.0.0"
+  },
+  "files": [
+    "/bin",
+    "/lib"
+  ],
+  "oclif": {
+    "bin": "mkmovielink"
+  },
+  "bin": {
+    "mkmovielink": "./bin/run"
+  },
+  "types": "lib/index.d.ts"
+}
