@@ -138,7 +138,7 @@ export class Channel {
       })
   }
 
-  get(): Observable<ChMap> {
+  get asObservable(): Observable<ChMap> {
     return this.channels$
   }
 }

@@ -1,19 +1,19 @@
-import {from, Observable, Subject} from "rxjs";
-import {map, mergeMap, tap} from "rxjs/operators";
 import axios, {AxiosResponse} from "axios";
 import * as moment from "moment";
 import {xml2js} from "xml-js";
+import {from, Observable, of, Subject, zip} from "rxjs";
+import {map, mergeMap} from "rxjs/operators";
 
 interface _ProgItem {
-    _attributes: { id: string }
-    PID: { _text: string },
-    TID: { _text: string },
-    StTime: { _text: string },
-    StOffset: { _text: string },
-    EdTime: { _text: string },
-    Count: { _text?: string },
-    ChID: { _text: string },
-    STSubTitle: { _text?: string }
+  _attributes: { id: string }
+  PID: { _text: string },
+  TID: { _text: string },
+  StTime: { _text: string },
+  StOffset: { _text: string },
+  EdTime: { _text: string },
+  Count: { _text?: string },
+  ChID: { _text: string },
+  STSubTitle: { _text?: string }
 }
 
 interface _ProgItems {
@@ -21,11 +21,22 @@ interface _ProgItems {
 }
 
 interface _ProgLookupResponse {
-  ProgItems: _ProgItems
+  Result: {}
+  ProgItems?: _ProgItems
 }
 
 interface _Root {
   ProgLookupResponse: _ProgLookupResponse
+}
+
+export interface Query {
+  channel: string
+  start: Date | moment.Moment
+}
+
+export interface QueryResult {
+  query: Query
+  programs: ProgItem[]
 }
 
 export interface ProgItem {
@@ -43,37 +54,38 @@ export interface ProgItem {
 
 export class Programs {
 
-  query$: Subject<Date | moment.Moment>
-  find$: Observable<ProgItem[]>
+  private readonly _query$: Subject<Query>
+  private readonly _observable$: Observable<QueryResult>
 
   constructor() {
-    this.query$ = new Subject<Date | moment.Moment>()
-    const find$ = new Subject<ProgItem[]>()
+    this._query$ = new Subject<Query>();
+    this._observable$ = this._query$.pipe(
+      mergeMap((query: Query) => {
+        let date = query.start
+        if (!moment.isMoment(date)) {
+          date = moment(date)
+        }
 
-    this.find$ = find$
+        // 指定した日付を含む日曜から土曜まで
+        const start = date.clone().day(0)
+        const end = date.clone().day(7)
 
-    this.query$
-      .pipe(
-        map((date: Date|moment.Moment) => {
-          if (!moment.isMoment(date)) {
-            date = moment(date)
-          }
+        const range = `${start.format('YYYYMMDD')}_000000-${end.format('YYYYMMDD')}_000000`
+        const httpRequest: Observable<AxiosResponse<_Root>> = from(axios.get(`http://cal.syoboi.jp/db.php?Command=ProgLookup&JOIN=SubTitles&Range=${range}`,
+          {
+            transformResponse: response => {
+              return xml2js(response as string, {compact: true})
+            }
+          }))
 
-          // 指定した日付を含む日曜から土曜まで
-          const start = date.clone().day(0)
-          const end = date.clone().day(7)
-          return `${start.format('YYYYMMDD')}_000000-${end.format('YYYYMMDD')}_000000`
-        }),
-        mergeMap((query: string) => from(axios.get(`https://cal.syoboi.jp/db.php?Command=ProgLookup&JOIN=SubTitles&Fiels=TID,StTime,StOffset,EdTime,Count,StSubTitle,ChID&Range=${query}`, {
-          method: 'get',
-          transformResponse: response => {
-            return xml2js(response as string, {compact: true})
-          }
-        }))),
-        map((response: AxiosResponse) => {
-          const data = response.data as _Root
-          console.log(data.ProgLookupResponse)
-          return data.ProgLookupResponse.ProgItems.ProgItem
+        return zip(httpRequest, of(query))
+      }),
+      map(([response, query]: [AxiosResponse, Query]) => {
+        const data = response.data as _Root
+
+        return <QueryResult>{
+          query: query,
+          programs: data.ProgLookupResponse.ProgItems!.ProgItem
             .map(_p => {
               return <ProgItem>{
                 id: Number(_p._attributes.id),
@@ -87,9 +99,16 @@ export class Programs {
                 STSubTitle: _p.STSubTitle._text
               }
             })
-        })
-      ).subscribe(doc => {
-        find$.next(doc)
+        }
       })
+    )
+  }
+
+  next(q: Query) {
+    this._query$.next(q)
+  }
+
+  get asObservable(): Observable<QueryResult> {
+    return this._observable$
   }
 }
