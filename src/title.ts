@@ -1,8 +1,7 @@
-import {from, Observable, Subject} from "rxjs";
-import {map, mergeMap} from "rxjs/operators";
+import {from, Observable} from "rxjs";
+import {map} from "rxjs/operators";
 import axios from "axios";
 import {xml2js} from "xml-js";
-import * as moment from 'moment'
 import {DateTime, IANAZone} from "luxon";
 
 interface TextElement {
@@ -40,6 +39,7 @@ interface _Root {
 }
 
 export type TID = string
+
 export interface TitleItem {
   TID: number
   LastUpdate: DateTime
@@ -49,24 +49,36 @@ export interface TitleItem {
   FirstMonth: number
   FirstEndYear?: number
   FirstEndMonth?: number
-  SubTitles: {[key:number]: string}
+  SubTitles: { [key: number]: string }
 }
 
 export class Title {
 
-  private readonly _query$: Subject<TID>
-  private readonly _observable$: Observable<TitleItem>
-
   constructor() {
-    this._query$ = new Subject<TID>();
-    this._observable$ = this._query$.pipe(
-      mergeMap((tid: TID) => {
-        return from(axios.get(`http://cal.syoboi.jp/db.php?Command=TitleLookup&TID=${tid}`, {
-          transformResponse: response => {
-            return xml2js(response as string, {compact: true})
-          }
-        }))
-      }),
+  }
+
+  private convertSubTitle(t: TextElement): { [key: number]: string } {
+    const result: { [key: number]: string } = {}
+    if (t._text) {
+      const regex = /\*([0-9]+)\*(.*)/
+      const lines = t._text.split('\r\n')
+
+      lines.forEach(line => {
+        const m = line.match(regex)
+        if (m) {
+          result[Number(m[1])] = m[2]
+        }
+      })
+    }
+    return result
+  }
+
+  find(tid: TID): Observable<TitleItem> {
+    return from(axios.get(`http://cal.syoboi.jp/db.php?Command=TitleLookup&TID=${tid}`, {
+      transformResponse: response => {
+        return xml2js(response as string, {compact: true})
+      }
+    })).pipe(
       map(response => {
         const data = response.data as _Root
         const titleItem = data.TitleLookupResponse.TitleItems.TitleItem
@@ -86,29 +98,5 @@ export class Title {
         }
       })
     )
-  }
-
-  private convertSubTitle(t: TextElement): {[key:number]: string} {
-    const result: {[key:number]: string} = {}
-    if (t._text) {
-      const regex = /\*([0-9]+)\*(.*)/
-      const lines = t._text.split('\r\n')
-
-      lines.forEach(line => {
-        const m = line.match(regex)
-        if (m) {
-          result[Number(m[1])] = m[2]
-        }
-      })
-    }
-    return result
-  }
-
-  next(tid: TID) {
-    this._query$.next(tid)
-  }
-
-  get asObservable(): Observable<TitleItem> {
-    return this._observable$
   }
 }

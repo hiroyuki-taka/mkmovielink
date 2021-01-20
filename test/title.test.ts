@@ -5,13 +5,11 @@ describe('title', () => {
 
   it('get', async () => {
     return new Promise((resolve, reject) => {
-      target.asObservable
+      target.find('5774')
         .subscribe(titleItem => {
-          console.log(titleItem.LastUpdate.toString(), titleItem)
+          console.log({...titleItem, LastUpdate: titleItem.LastUpdate.toJSON()})
           resolve()
         })
-
-      target.next('5774')
     })
   })
 })
