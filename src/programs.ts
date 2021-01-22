@@ -3,6 +3,7 @@ import {xml2js} from "xml-js";
 import {from, Observable} from "rxjs";
 import {map} from "rxjs/operators";
 import {DateTime} from "luxon";
+import {ProgItem, Query, QueryResult} from "./types";
 
 interface _ProgItem {
   _attributes: { id: string }
@@ -29,27 +30,6 @@ interface _Root {
   ProgLookupResponse: _ProgLookupResponse
 }
 
-export interface Query {
-  channel: string
-  start: DateTime
-}
-
-export interface QueryResult {
-  query: Query
-  programs: ProgItem[]
-}
-
-export interface ProgItem {
-  id: number
-  PID: string
-  TID: string
-  StTime: DateTime
-  StOffset: number
-  EdTime: DateTime
-  Count?: number
-  ChID: number
-  STSubTitle?: string
-}
 
 export class Programs {
 

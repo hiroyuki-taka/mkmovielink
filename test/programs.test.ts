@@ -1,7 +1,8 @@
-import {Programs, QueryResult} from "../src/programs";
-import {Channel, ChMap} from "../src/channel";
+import {Programs} from "../src/programs";
+import {Channel} from "../src/channel";
 import {combineLatest} from "rxjs";
 import {DateTime} from "luxon";
+import {ChMap, QueryResult} from "../src/types";
 
 describe('programs', () => {
 

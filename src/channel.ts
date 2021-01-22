@@ -1,7 +1,9 @@
 import {combineLatest, from, Observable, ReplaySubject} from "rxjs";
-import axios from "axios";
 import {xml2js} from "xml-js";
 import {map} from "rxjs/operators";
+import * as log4js from 'log4js'
+import {Http} from "./http";
+import {ChItem, ChMap, MirakurunChID, MirakurunChName} from "./types";
 
 interface TextNode {
   _text: string
@@ -27,7 +29,7 @@ interface _Root {
 }
 
 interface MirakurunService {
-  type: 'GR'|'CS'|'BS',
+  type: 'GR' | 'CS' | 'BS',
   channel: string
   name: string
   services: {
@@ -35,64 +37,44 @@ interface MirakurunService {
   }[]
 }
 
-export interface ChItem {
-  ChID: number
-  ChName: string
-  ChGID: number
-  ChNumber: number
-  ChURL: string
-  ChiEPGName: string
-  ChEPGURL: string
-}
-
-
-export type MirakurunChID = string
-export type MirakurunChName = string
-
-export interface ChMap {
-  [key: string /* MirakurunChID */]: ChItem | undefined | MirakurunChName
-}
 
 export class Channel {
-  channels$: Observable<ChMap>
+
+  readonly channels$: Observable<ChMap>
+  readonly logger: log4js.Logger
+  readonly http: Http
 
   constructor() {
-    const r$ = new ReplaySubject<ChMap>(1)
+    this.logger = log4js.getLogger('Channel')
+    this.http = new Http()
 
+    const r$ = new ReplaySubject<ChMap>(1)
     this.channels$ = r$
 
-    const c$ = from(axios.get('http://cal.syoboi.jp/db.php?Command=ChLookup', {
-      method: 'get', transformResponse: data => {
-        return xml2js(data, {compact: true})
-      }
-    }))
-      .pipe(
-        map(response => {
-          return (response.data as _Root).ChLookupResponse.ChItems.ChItem
-            .map(_p => {
-              return <ChItem>{
-                ChID: Number(_p.ChID._text),
-                ChName: _p.ChName._text,
-                ChiEPGName: _p.ChiEPGName._text,
-                ChURL: _p.ChURL._text,
-                ChEPGURL: _p.ChEPGURL._text,
-                ChComment: _p.ChComment._text,
-                ChGID: Number(_p.ChGID._text),
-                ChNumber: Number(_p.ChNumber._text)
-              }
-            })
-        })
-      )
-
-    const d$ = from(axios('http://192.168.0.170:40772/api/channels', {
-      headers: {
-        'accept': 'application/json'
-      }
-    })).pipe(
+    const c$ = this.http.request<_Root>('get', 'http://cal.syoboi.jp/db.php?Command=ChLookup', data => {
+      return xml2js(data, {compact: true})
+    }).pipe(
       map(response => {
-        const result: {[key: string]: string} = {};
-        (response.data as MirakurunService[]).forEach(value => {
+        return response.data.ChLookupResponse.ChItems.ChItem
+          .map(_p => {
+            return <ChItem>{
+              ChID: Number(_p.ChID._text),
+              ChName: _p.ChName._text,
+              ChiEPGName: _p.ChiEPGName._text,
+              ChURL: _p.ChURL._text,
+              ChEPGURL: _p.ChEPGURL._text,
+              ChComment: _p.ChComment._text,
+              ChGID: Number(_p.ChGID._text),
+              ChNumber: Number(_p.ChNumber._text)
+            }
+          })
+      })
+    )
 
+    const d$ = this.http.request<MirakurunService[]>('get', 'http://192.168.0.170:40772/api/channels').pipe(
+      map(response => {
+        const result: { [key: string]: string } = {};
+        response.data.forEach(value => {
           switch (value.type) {
             case 'GR':
               const name = value.name
@@ -107,7 +89,7 @@ export class Channel {
               })
               break
             case 'CS':
-              // none
+            // none
           }
         })
         return result
@@ -123,7 +105,7 @@ export class Channel {
           const searchKey = name
             .replace('NHKEテレ', 'NHK Eテレ')
             .replace('日テレ', '日本テレビ')
-            .replace('チバテレ','チバテレビ')
+            .replace('チバテレ', 'チバテレビ')
             .replace('J:COMチャンネル', 'J:COMテレビ')
             .replace('NHKBS1', 'NHK-BS1')
             .replace('BS朝日1', 'BS朝日')

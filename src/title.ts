@@ -3,6 +3,7 @@ import {map} from "rxjs/operators";
 import axios from "axios";
 import {xml2js} from "xml-js";
 import {DateTime, IANAZone} from "luxon";
+import {TID, TitleItem} from "./types";
 
 interface TextElement {
   _text?: string
@@ -38,19 +39,6 @@ interface _Root {
   TitleLookupResponse: _TitleLookupResponse
 }
 
-export type TID = string
-
-export interface TitleItem {
-  TID: number
-  LastUpdate: DateTime
-  Title: string
-  TitleYomi: string
-  FirstYear: number
-  FirstMonth: number
-  FirstEndYear?: number
-  FirstEndMonth?: number
-  SubTitles: { [key: number]: string }
-}
 
 export class Title {
 
@@ -84,7 +72,7 @@ export class Title {
         const titleItem = data.TitleLookupResponse.TitleItems.TitleItem
 
         return <TitleItem>{
-          TID: Number(titleItem.TID._text),
+          TID: titleItem.TID._text,
           LastUpdate: DateTime.fromFormat(titleItem.LastUpdate._text!, 'yyyy-MM-dd HH:mm:ss', {
             zone: IANAZone.create('Asia/Tokyo')
           }),
