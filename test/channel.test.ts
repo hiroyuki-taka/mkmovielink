@@ -1,4 +1,4 @@
-import {Channel} from "../src/channel";
+import {Channels} from "../src/channels";
 import * as log4js from 'log4js'
 
 describe('channel', () => {
@@ -24,7 +24,7 @@ describe('channel', () => {
   it('get', async () => {
 
     return new Promise(resolve => {
-      new Channel().asObservable
+      new Channels().asObservable
         .subscribe(x => {
           console.log(x)
           resolve()

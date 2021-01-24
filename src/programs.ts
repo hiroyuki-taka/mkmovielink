@@ -1,9 +1,10 @@
-import axios from "axios";
 import {xml2js} from "xml-js";
-import {from, Observable} from "rxjs";
+import {Observable} from "rxjs";
 import {map} from "rxjs/operators";
 import {DateTime} from "luxon";
 import {ProgItem, Query, QueryResult} from "./types";
+import {http} from "./http";
+import * as log4js from "log4js";
 
 interface _ProgItem {
   _attributes: { id: string }
@@ -32,11 +33,17 @@ interface _Root {
 
 
 export class Programs {
+  readonly logger: log4js.Logger
+  private requestId = 0;
 
   constructor() {
+    this.logger = log4js.getLogger('LocalFiles')
   }
 
   find(query: Query): Observable<QueryResult> {
+    const queryId = this.requestId++
+    this.logger.info(`reqId: ${queryId}, find: ${JSON.stringify(query)}`)
+
     let date = query.start
 
     // 指定した日付を含む日曜から土曜まで
@@ -45,14 +52,11 @@ export class Programs {
 
     const range = `${start.toFormat('yyyyMMdd')}_000000-${end.toFormat('yyyyMMdd')}_000000`
 
-    return from(axios.get(`http://cal.syoboi.jp/db.php?Command=ProgLookup&JOIN=SubTitles&Range=${range}`,
-      {
-        transformResponse: response => {
-          return xml2js(response as string, {compact: true})
-        }
-      })).pipe(
+    return http.request<_Root>('get', `http://cal.syoboi.jp/db.php?Command=ProgLookup&JOIN=SubTitles&Range=${range}`,
+      response => xml2js(response as string, {compact: true})).pipe(
       map(response => {
-        const data = response.data as _Root
+        this.logger.info(`reqId: ${queryId} receive ProgLookup response`)
+        const data = response.data
 
         return <QueryResult>{
           query: query,

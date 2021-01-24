@@ -3,13 +3,13 @@ import {DateTime} from "luxon";
 export type MirakurunChID = string
 export type MirakurunChName = string
 export type Filename = string
-export type FilePath = string
+export type DirectoryName = string
 export type TID = string
 
 
 export interface TargetFile {
+  folder: string
   name: Filename
-  full: FilePath
   mirakurunChId: string
   title: string
   start: DateTime
@@ -25,6 +25,10 @@ export interface ChItem {
   ChURL: string
   ChiEPGName: string
   ChEPGURL: string
+}
+
+export function isChItem(arg: any): arg is ChItem {
+  return arg && arg.ChID !== undefined
 }
 
 export interface ChMap {

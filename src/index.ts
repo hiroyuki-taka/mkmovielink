@@ -1,8 +1,5 @@
 import {Command, flags} from '@oclif/command'
-import * as fs from "fs";
-import {bindNodeCallback, of} from "rxjs";
-import {filter, map, mergeMap} from "rxjs/operators";
-import {fromPromise} from "rxjs/internal-compatibility";
+import {from} from "rxjs";
 import axios from "axios";
 
 class Mkmovielink extends Command {
@@ -31,28 +28,7 @@ class Mkmovielink extends Command {
       this.log(`you input --force and --file: ${args.file}`)
     }
 
-    const targetDirectoryPattern = RegExp('([0-9]{4})([1-4])Q (.*)')
-    bindNodeCallback(fs.readdir)('w:/movie')
-      .pipe(
-        mergeMap(files => {
-          return of(...(files as string[]))
-        }),
-        filter(file => targetDirectoryPattern.test(file)),
-        map(file => {
-          const result = targetDirectoryPattern.exec(file) as RegExpExecArray
-          return {
-            year: Number(result[1]),
-            season: Number(result[2]),
-            title: result[3],
-            origin: result[0]
-          }
-        })
-      )
-      .subscribe(file => {
-        console.log(file)
-      })
-
-    fromPromise(axios.get('http://cal.syoboi.jp/?Command=ProgLookup&Range=20210110_000000-20210111_000000', {responseType: 'document'}))
+    from(axios.get('http://cal.syoboi.jp/?Command=ProgLookup&Range=20210110_000000-20210111_000000', {responseType: 'document'}))
       .pipe(
       ).subscribe(response => {
         console.log(response.data)

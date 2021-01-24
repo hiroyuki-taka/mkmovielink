@@ -2,7 +2,7 @@ import {combineLatest, from, Observable, ReplaySubject} from "rxjs";
 import {xml2js} from "xml-js";
 import {map} from "rxjs/operators";
 import * as log4js from 'log4js'
-import {Http} from "./http";
+import {http, Http} from "./http";
 import {ChItem, ChMap, MirakurunChID, MirakurunChName} from "./types";
 
 interface TextNode {
@@ -38,23 +38,22 @@ interface MirakurunService {
 }
 
 
-export class Channel {
+export class Channels {
 
   readonly channels$: Observable<ChMap>
   readonly logger: log4js.Logger
-  readonly http: Http
 
   constructor() {
     this.logger = log4js.getLogger('Channel')
-    this.http = new Http()
 
     const r$ = new ReplaySubject<ChMap>(1)
     this.channels$ = r$
 
-    const c$ = this.http.request<_Root>('get', 'http://cal.syoboi.jp/db.php?Command=ChLookup', data => {
+    const c$ = http.request<_Root>('get', 'http://cal.syoboi.jp/db.php?Command=ChLookup', data => {
       return xml2js(data, {compact: true})
     }).pipe(
       map(response => {
+        this.logger.info(`receive ChLookup response.`)
         return response.data.ChLookupResponse.ChItems.ChItem
           .map(_p => {
             return <ChItem>{
@@ -71,8 +70,9 @@ export class Channel {
       })
     )
 
-    const d$ = this.http.request<MirakurunService[]>('get', 'http://192.168.0.170:40772/api/channels').pipe(
+    const d$ = http.request<MirakurunService[]>('get', 'http://192.168.0.170:40772/api/channels').pipe(
       map(response => {
+        this.logger.info(`receive mirakurun Channels response.`)
         const result: { [key: string]: string } = {};
         response.data.forEach(value => {
           switch (value.type) {
@@ -117,6 +117,7 @@ export class Channel {
           chmap[id] = c.find(chItem => chItem.ChName == searchKey)
         })
         r$.next(chmap)
+        r$.complete()
       })
   }
 

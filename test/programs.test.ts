@@ -1,5 +1,5 @@
 import {Programs} from "../src/programs";
-import {Channel} from "../src/channel";
+import {Channels} from "../src/channels";
 import {combineLatest} from "rxjs";
 import {DateTime} from "luxon";
 import {ChMap, QueryResult} from "../src/types";
@@ -7,7 +7,7 @@ import {ChMap, QueryResult} from "../src/types";
 describe('programs', () => {
 
   const programs = new Programs()
-  const channel = new Channel()
+  const channel = new Channels()
 
   it('20210113_000000', async () => {
     return new Promise((resolve, reject) => {

@@ -4,6 +4,8 @@ import axios from "axios";
 import {xml2js} from "xml-js";
 import {DateTime, IANAZone} from "luxon";
 import {TID, TitleItem} from "./types";
+import {http} from "./http";
+import * as log4js from "log4js";
 
 interface TextElement {
   _text?: string
@@ -40,9 +42,11 @@ interface _Root {
 }
 
 
-export class Title {
+export class Titles {
+  readonly logger: log4js.Logger
 
   constructor() {
+    this.logger = log4js.getLogger('Titles')
   }
 
   private convertSubTitle(t: TextElement): { [key: number]: string } {
@@ -62,12 +66,13 @@ export class Title {
   }
 
   find(tid: TID): Observable<TitleItem> {
-    return from(axios.get(`http://cal.syoboi.jp/db.php?Command=TitleLookup&TID=${tid}`, {
-      transformResponse: response => {
+    this.logger.info(`tid=${tid}, find`)
+    return from(http.request('get', `http://cal.syoboi.jp/db.php?Command=TitleLookup&TID=${tid}`, response => {
         return xml2js(response as string, {compact: true})
-      }
     })).pipe(
       map(response => {
+        this.logger.info(`tid=${tid}, receive TitleLookup response`)
+
         const data = response.data as _Root
         const titleItem = data.TitleLookupResponse.TitleItems.TitleItem
 

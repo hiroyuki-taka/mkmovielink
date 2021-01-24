@@ -1,7 +1,7 @@
-import {Title} from "../src/title";
+import {Titles} from "../src/titles";
 
 describe('title', () => {
-  const target = new Title()
+  const target = new Titles()
 
   it('get', async () => {
     return new Promise((resolve, reject) => {

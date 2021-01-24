@@ -1,26 +1,63 @@
-import {from, Observable} from "rxjs";
+import {asapScheduler, asyncScheduler, interval, Observable, queueScheduler, ReplaySubject, Subject} from "rxjs";
 import axios, {AxiosInstance, AxiosResponse, AxiosTransformer, Method} from "axios";
 import * as log4js from "log4js";
 
 export class Http {
-  readonly axiosInstance: AxiosInstance
   readonly logger: log4js.Logger
+  readonly requestCache: Map<string, Subject<AxiosResponse<any>>>
+  readonly axiosInstance: AxiosInstance
+  readonly queue: [Method, string, AxiosTransformer?][]
 
   constructor() {
     this.logger = log4js.getLogger('Http')
+    this.requestCache = new Map<string, Subject<AxiosResponse<any>>>()
     this.axiosInstance = axios.create()
 
+    this.queue = []
+    interval(1200).subscribe(() => {
+      this.logger.info('queue check', this.queue.length)
+      const value = this.queue.pop()
+
+      if (value) {
+        const [method, url, transformResponse] = value
+        const key = `${method}::${url}`
+        const observer = this.requestCache.get(key)
+
+        if (observer) {
+          this.axiosInstance.request({method, url, transformResponse})
+            .then(response => observer.next(response))
+            .catch(reason => {observer.error(reason)})
+            .finally(() => observer.complete())
+        }
+      }
+    })
+
     this.axiosInstance.interceptors.request.use(config => {
-      this.logger.info(`send http request. method: ${config.method}, url: ${config.url}, body: ${config.data ? JSON.stringify(config.data) : '<null>'}`)
+      this.logger.info(`send http request. method: ${config.method}, url: ${config.url}, body: ${config.data ? this.abbreviate(JSON.stringify(config.data), 120) : '<null>'}`)
       return config
     })
     this.axiosInstance.interceptors.response.use(response => {
-      this.logger.info(`receive http response. data: ${response.data ? JSON.stringify(response.data) : '<null>'}`)
+      this.logger.info(`receive http response. data: ${response.data ? this.abbreviate(JSON.stringify(response.data), 120) : '<null>'}`)
       return response
     })
   }
 
+  abbreviate(s: string, maxLength: number): string {
+    if (!s || s.length < maxLength - 3) {
+      return s
+    }
+    return s.slice(0, maxLength - 3) + '...'
+  }
+
   request<T>(method: Method, url: string, transformResponse?: AxiosTransformer): Observable<AxiosResponse<T>> {
-    return from(this.axiosInstance.request({url: url, method: method, transformResponse}))
+    const key = `${method}::${url}`
+    if (!this.requestCache.has(key)) {
+      this.logger.info(`queueing: ${key}`)
+      this.requestCache.set(key, new ReplaySubject(1))
+      this.queue.push([method, url, transformResponse])
+    }
+    return this.requestCache.get(key) as Observable<AxiosResponse<T>>
   }
 }
+
+export const http = new Http()

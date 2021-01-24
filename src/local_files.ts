@@ -46,8 +46,8 @@ export class LocalFiles {
               exFiles[exf[4]] = exf[0]
             })
             response.push(<TargetFile>{
+              folder: root,
               name: base[0],
-              full: path.join(root, base[0]),
               mirakurunChId: base[1],
               title: base[2],
               start: DateTime.fromFormat(base[3], 'yyyy年MM月dd日HH時mm分'),
