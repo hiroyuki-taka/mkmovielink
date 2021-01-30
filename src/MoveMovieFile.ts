@@ -2,11 +2,12 @@ import {DirectoryName, isChItem, ProgItem, TargetFile, TitleItem} from "./types"
 import * as log4js from 'log4js'
 import {LocalFiles} from "./local_files";
 import {DateTime} from "luxon";
-import {map, mergeMap, take, tap} from "rxjs/operators";
+import {map, max, mergeMap, take, tap} from "rxjs/operators";
 import {combineLatest, EMPTY, NEVER, Observable, of} from "rxjs";
 import {Programs} from "./programs";
 import {Channels} from "./channels";
 import {Titles} from "./titles";
+import * as path from "path";
 
 export class MoveMovieFile {
 
@@ -24,7 +25,7 @@ export class MoveMovieFile {
     this.titles = new Titles()
   }
 
-  execute(movieRoot: DirectoryName, storageRoot: DirectoryName) {
+  execute(movieRoot: DirectoryName, storageRoot: DirectoryName, kanaRoot: DirectoryName) {
     return this.localFiles.list(movieRoot).pipe(
       mergeMap<TargetFile[], Observable<TargetFile>>(fileList => of(...fileList)),
       take(30),
@@ -50,13 +51,44 @@ export class MoveMovieFile {
         return EMPTY
       }),
       map(([file, program, title]) => {
-        this.logger.info('title: ' + title)
+
+        const newName = `[${file.mirakurunChId}] #${this.toCount(program, title)} ${program.STSubTitle}`
+        const containerDirectory = `${this.toSeason(title.FirstYear, title.FirstMonth)} ${title.Title}`
+
+        this.logger.info('move %s -> %s',
+          path.join(file.folder, file.title),
+          path.join(storageRoot, containerDirectory, `${newName}.mp4`))
+        this.logger.info('ln -s %s -> %s',
+          path.join(storageRoot, containerDirectory, `${newName}.mp4`),
+          path.join(kanaRoot, title.TitleYomi.slice(0, 1), containerDirectory, `${newName}.mp4`))
+
+        if (file.ass) {
+          this.logger.info('move %s -> %s',
+            path.join(file.folder, file.ass),
+            path.join(storageRoot, containerDirectory, `${newName}.ass`))
+          this.logger.info('ln -s %s -> %s',
+            path.join(storageRoot, containerDirectory, `${newName}.ass`),
+            path.join(kanaRoot, title.TitleYomi.slice(0, 1), containerDirectory, `${newName}.ass`))
+        }
+
+        Object.entries(file.extends).forEach(([key, name]) => {
+          this.logger.info('move %s -> %s', path.join(file.folder, name), path.join(storageRoot, containerDirectory, `${newName}${key}`))
+        })
         return ''
       })
     )
   }
 
-  private toSeason(start: DateTime): string {
-    return `${start.year}${Math.ceil(start.month/4)+1}Q`
+  private toSeason(firstStartYear: number, firstStartMonth: number): string {
+    return `${firstStartYear}${Math.ceil(firstStartMonth/4)+1}Q`
+  }
+
+  private toCount(program: ProgItem, title: TitleItem): string {
+    if (title.SubTitles) {
+      const maxLength = Math.max(...Object.keys(title.SubTitles).map(x => String(x).length))
+      return String(program.Count).padStart(maxLength, '0')
+    }
+
+    return String(program.Count).padStart(2, '0')
   }
 }

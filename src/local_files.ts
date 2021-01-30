@@ -43,7 +43,7 @@ export class LocalFiles {
           if (base) {
             const exFiles: {[key: string]: Filename} = {}
             ex.forEach(exf => {
-              exFiles[exf[4]] = exf[0]
+              exFiles[`${exf[4]}.${exf[5]}`] = exf[0]
             })
             response.push(<TargetFile>{
               folder: root,

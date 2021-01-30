@@ -27,7 +27,7 @@ describe('MoveMovieFile', () => {
     this.timeout(20000)
 
     return new Promise((resolve, reject) => {
-      target.execute('D:\\movie\\encoded\\アニメ／特撮', 'W:\\movie')
+      target.execute('D:\\movie\\encoded\\アニメ／特撮', 'W:\\movie', 'W:\\movie_kana')
         .subscribe((x) => {
             console.log(JSON.stringify(x).slice(0, 300))
           },
