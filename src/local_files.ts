@@ -1,6 +1,5 @@
 import {bindNodeCallback, Observable} from "rxjs";
 import * as fs from "fs";
-import * as path from 'path';
 import * as log4js from 'log4js';
 import {map} from "rxjs/operators";
 import {DateTime} from "luxon";
@@ -41,7 +40,7 @@ export class LocalFiles {
           const ex = value.filter(v => v[4] !== undefined)
 
           if (base) {
-            const exFiles: {[key: string]: Filename} = {}
+            const exFiles: { [key: string]: Filename } = {}
             ex.forEach(exf => {
               exFiles[`${exf[4]}.${exf[5]}`] = exf[0]
             })

@@ -17,10 +17,12 @@
     "@oclif/plugin-help": "^3",
     "@types/log4js": "^2.3.5",
     "@types/luxon": "^1.25.1",
+    "@types/sanitize-filename": "^1.6.3",
     "axios": "^0.21.1",
     "log4js": "^6.3.0",
     "luxon": "^1.25.0",
     "rxjs": "^6.6.3",
+    "sanitize-filename": "^1.6.3",
     "tslib": "^1",
     "xml-js": "^1.6.11"
   },

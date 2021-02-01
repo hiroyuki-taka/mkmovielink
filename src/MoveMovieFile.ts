@@ -8,10 +8,12 @@ import {Programs} from "./programs";
 import {Channels} from "./channels";
 import {Titles} from "./titles";
 import * as path from "path";
+import {Http} from "./http";
 
 export class MoveMovieFile {
 
   readonly logger: log4js.Logger
+  readonly httpClient: Http
   readonly localFiles: LocalFiles
   readonly programs: Programs
   readonly channels: Channels
@@ -20,9 +22,10 @@ export class MoveMovieFile {
   constructor() {
     this.logger = log4js.getLogger('MoveTargetFolder')
     this.localFiles = new LocalFiles()
-    this.programs = new Programs()
-    this.channels = new Channels()
-    this.titles = new Titles()
+    this.httpClient = new Http()
+    this.programs = new Programs(this.httpClient)
+    this.channels = new Channels(this.httpClient)
+    this.titles = new Titles(this.httpClient)
   }
 
   execute(movieRoot: DirectoryName, storageRoot: DirectoryName, kanaRoot: DirectoryName) {
@@ -51,7 +54,6 @@ export class MoveMovieFile {
         return EMPTY
       }),
       map(([file, program, title]) => {
-
         const newName = `[${file.mirakurunChId}] #${this.toCount(program, title)} ${program.STSubTitle}`
         const containerDirectory = `${this.toSeason(title.FirstYear, title.FirstMonth)} ${title.Title}`
 

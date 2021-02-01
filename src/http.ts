@@ -1,4 +1,4 @@
-import {asapScheduler, asyncScheduler, interval, Observable, queueScheduler, ReplaySubject, Subject} from "rxjs";
+import {interval, Observable, ReplaySubject, Subject, Subscription} from "rxjs";
 import axios, {AxiosInstance, AxiosResponse, AxiosTransformer, Method} from "axios";
 import * as log4js from "log4js";
 
@@ -8,13 +8,15 @@ export class Http {
   readonly axiosInstance: AxiosInstance
   readonly queue: [Method, string, AxiosTransformer?][]
 
+  readonly timerSubscription: Subscription
+
   constructor() {
     this.logger = log4js.getLogger('Http')
     this.requestCache = new Map<string, Subject<AxiosResponse<any>>>()
     this.axiosInstance = axios.create()
 
     this.queue = []
-    interval(1200).subscribe(() => {
+    this.timerSubscription = interval(1200).subscribe(() => {
       this.logger.info('queue check', this.queue.length)
       const value = this.queue.pop()
 
@@ -26,7 +28,9 @@ export class Http {
         if (observer) {
           this.axiosInstance.request({method, url, transformResponse})
             .then(response => observer.next(response))
-            .catch(reason => {observer.error(reason)})
+            .catch(reason => {
+              observer.error(reason)
+            })
             .finally(() => observer.complete())
         }
       }
@@ -58,6 +62,8 @@ export class Http {
     }
     return this.requestCache.get(key) as Observable<AxiosResponse<T>>
   }
-}
 
-export const http = new Http()
+  dispose() {
+    this.timerSubscription.unsubscribe()
+  }
+}

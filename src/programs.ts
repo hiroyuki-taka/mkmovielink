@@ -3,7 +3,7 @@ import {Observable} from "rxjs";
 import {map} from "rxjs/operators";
 import {DateTime} from "luxon";
 import {ProgItem, Query, QueryResult} from "./types";
-import {http} from "./http";
+import {Http} from "./http";
 import * as log4js from "log4js";
 
 interface _ProgItem {
@@ -36,7 +36,7 @@ export class Programs {
   readonly logger: log4js.Logger
   private requestId = 0;
 
-  constructor() {
+  constructor(readonly httpClient: Http) {
     this.logger = log4js.getLogger('LocalFiles')
   }
 
@@ -52,7 +52,7 @@ export class Programs {
 
     const range = `${start.toFormat('yyyyMMdd')}_000000-${end.toFormat('yyyyMMdd')}_000000`
 
-    return http.request<_Root>('get', `http://cal.syoboi.jp/db.php?Command=ProgLookup&JOIN=SubTitles&Range=${range}`,
+    return this.httpClient.request<_Root>('get', `http://cal.syoboi.jp/db.php?Command=ProgLookup&JOIN=SubTitles&Range=${range}`,
       response => xml2js(response as string, {compact: true})).pipe(
       map(response => {
         this.logger.info(`reqId: ${queryId} receive ProgLookup response`)

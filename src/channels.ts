@@ -1,8 +1,8 @@
-import {combineLatest, from, Observable, ReplaySubject} from "rxjs";
+import {combineLatest, Observable, ReplaySubject} from "rxjs";
 import {xml2js} from "xml-js";
 import {map} from "rxjs/operators";
 import * as log4js from 'log4js'
-import {http, Http} from "./http";
+import {Http} from "./http";
 import {ChItem, ChMap, MirakurunChID, MirakurunChName} from "./types";
 
 interface TextNode {
@@ -43,13 +43,13 @@ export class Channels {
   readonly channels$: Observable<ChMap>
   readonly logger: log4js.Logger
 
-  constructor() {
+  constructor(readonly httpClient: Http) {
     this.logger = log4js.getLogger('Channel')
 
     const r$ = new ReplaySubject<ChMap>(1)
     this.channels$ = r$
 
-    const c$ = http.request<_Root>('get', 'http://cal.syoboi.jp/db.php?Command=ChLookup', data => {
+    const c$ = this.httpClient.request<_Root>('get', 'http://cal.syoboi.jp/db.php?Command=ChLookup', data => {
       return xml2js(data, {compact: true})
     }).pipe(
       map(response => {
@@ -70,7 +70,7 @@ export class Channels {
       })
     )
 
-    const d$ = http.request<MirakurunService[]>('get', 'http://192.168.0.170:40772/api/channels').pipe(
+    const d$ = this.httpClient.request<MirakurunService[]>('get', 'http://192.168.0.170:40772/api/channels').pipe(
       map(response => {
         this.logger.info(`receive mirakurun Channels response.`)
         const result: { [key: string]: string } = {};
