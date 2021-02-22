@@ -49,11 +49,11 @@ export class Channels {
     const r$ = new ReplaySubject<ChMap>(1)
     this.channels$ = r$
 
+    // しょぼカルのチャンネル一覧取得
     const c$ = this.httpClient.request<_Root>('get', 'http://cal.syoboi.jp/db.php?Command=ChLookup', data => {
       return xml2js(data, {compact: true})
     }).pipe(
       map(response => {
-        this.logger.info(`receive ChLookup response.`)
         return response.data.ChLookupResponse.ChItems.ChItem
           .map(_p => {
             return <ChItem>{
@@ -70,13 +70,14 @@ export class Channels {
       })
     )
 
+    // mirakurunのチャンネル一覧取得
     const d$ = this.httpClient.request<MirakurunService[]>('get', 'http://192.168.0.170:40772/api/channels').pipe(
       map(response => {
-        this.logger.info(`receive mirakurun Channels response.`)
         const result: { [key: string]: string } = {};
         response.data.forEach(value => {
           switch (value.type) {
             case 'GR':
+              // 半角へ変換
               const name = value.name
                 .replace(/[\uff01-\uff5e]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xfee0))
               result[name] = value.channel
@@ -89,13 +90,21 @@ export class Channels {
               })
               break
             case 'CS':
-            // none
+              value.services.forEach(s => {
+                const name = s.name
+                  .replace(/[\uff01-\uff5e]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xfee0))
+                if (name === 'AT-X' || name === 'BSアニマックス' || name === 'キッズステーション') {
+                  result[name] = value.channel
+                }
+              })
+              break
           }
         })
         return result
       })
     )
 
+    // 結合
     combineLatest([c$, d$])
       .subscribe(([c, d]) => {
         const chmap: ChMap = {}
@@ -113,6 +122,7 @@ export class Channels {
             .replace('NHKBSプレミアム', 'NHK BSプレミアム')
             .replace('BSフジ・181', 'BSフジ')
             .replace('TOKYO　MX', 'TOKYO MX')
+            .replace('BSアニマックス', 'アニマックス')
 
           chmap[id] = c.find(chItem => chItem.ChName == searchKey)
         })
