@@ -7,4 +7,7 @@ GET http://cal.syoboi.jp/db.php?Command=ProgLookup&Range=20210110_000000-2021011
 GET http://cal.syoboi.jp/db.php?Command=ChLookup
 
 ###
-GET http://cal.syoboi.jp/db.php?Command=TitleLookup&TID=5773,5774
+GET http://cal.syoboi.jp/db.php?Command=TitleLookup&TID=3163
+
+###
+GET http://cal.syoboi.jp/db.php?Command=ProgLookup&JOIN=SubTitles&Range=20210215_000000-20210222_000000

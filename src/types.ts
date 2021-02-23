@@ -67,6 +67,7 @@ export interface ProgItem {
   EdTime: DateTime
   Count?: number
   ChID: number
+  SubTitle?: string
   STSubTitle?: string
 }
 

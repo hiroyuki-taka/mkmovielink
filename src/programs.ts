@@ -15,6 +15,7 @@ interface _ProgItem {
   EdTime: { _text: string },
   Count: { _text?: string },
   ChID: { _text: string },
+  SubTitle: { _text: string },
   STSubTitle: { _text?: string }
 }
 
@@ -69,8 +70,9 @@ export class Programs {
                 StTime: DateTime.fromFormat(_p.StTime._text, 'yyyy-MM-dd HH:mm:ss'),
                 StOffset: Number(_p.StOffset._text),
                 EdTime: DateTime.fromFormat(_p.EdTime._text, 'yyyy-MM-dd HH:mm:ss'),
-                Count: Number(_p.Count._text),
+                Count: _p.Count._text ? Number(_p.Count._text) : undefined,
                 ChID: Number(_p.ChID._text),
+                SubTitle: _p.SubTitle._text,
                 STSubTitle: _p.STSubTitle._text
               }
             })
