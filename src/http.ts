@@ -37,11 +37,11 @@ export class Http {
     })
 
     this.axiosInstance.interceptors.request.use(config => {
-      this.logger.info(`send http request. method: ${config.method}, url: ${config.url}, body: ${config.data ? this.abbreviate(JSON.stringify(config.data), 120) : '<null>'}`)
+      this.logger.debug(`send http request. method: ${config.method}, url: ${config.url}, body: ${config.data ? this.abbreviate(JSON.stringify(config.data), 4096) : '<null>'}`)
       return config
     })
     this.axiosInstance.interceptors.response.use(response => {
-      this.logger.info(`receive http response. data: ${response.data ? this.abbreviate(JSON.stringify(response.data), 120) : '<null>'}`)
+      this.logger.debug(`receive http response. data: ${response.data ? this.abbreviate(JSON.stringify(response.data), 4096) : '<null>'}`)
       return response
     })
   }

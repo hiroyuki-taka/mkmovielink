@@ -47,7 +47,7 @@ export class Programs {
 
     let date = query.start
 
-    // 指定した日付を含む日曜から土曜まで
+    // 指定した日付を含む日曜から土曜までをまとめて取得する
     const start = date.startOf('week')
     const end = date.plus({'week': 1}).startOf('week')
 
