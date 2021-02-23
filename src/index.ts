@@ -1,7 +1,7 @@
 import {Command, flags} from '@oclif/command'
 import * as log4js from 'log4js'
 import {LocalFiles} from "./local_files";
-import {mergeMap, take} from "rxjs/operators";
+import {mergeMap} from "rxjs/operators";
 import {combineLatest, EMPTY, of} from "rxjs";
 import {Programs} from "./programs";
 import {Channels} from "./channels";
@@ -65,7 +65,7 @@ class Mkmovielink extends Command {
               p => p.ChID === targetChannel.ChID && p.StTime.equals(file.start)
             )
 
-            if (program && program.Count) {
+            if (program) {
               this.logger.info(`find file: ${file.name}, TID: ${program.TID}, count: ${program.Count}, subtitle: ${program.STSubTitle}`)
               return combineLatest<[TargetFile, ProgItem, TitleItem]>([of(file), of(program), titles.find(program.TID)])
             }
@@ -127,7 +127,7 @@ class Mkmovielink extends Command {
   private toCount(program: ProgItem, title: TitleItem): string {
     if (title.SubTitles) {
       const maxLength = Math.max(2, ...Object.keys(title.SubTitles).map(x => String(x).length))
-      return String(program.Count).padStart(maxLength, '0')
+      return String(program.Count || '0').padStart(maxLength, '0')
     }
 
     return String(program.Count).padStart(2, '0')
