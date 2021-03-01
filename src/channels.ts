@@ -2,7 +2,7 @@ import {combineLatest, Observable, ReplaySubject} from "rxjs";
 import {xml2js} from "xml-js";
 import {map} from "rxjs/operators";
 import * as log4js from 'log4js'
-import {Http} from "./http";
+import {HttpClient} from "./httpClient";
 import {ChItem, ChMap, MirakurunChID, MirakurunChName} from "./types";
 
 interface TextNode {
@@ -43,7 +43,7 @@ export class Channels {
   readonly channels$: Observable<ChMap>
   readonly logger: log4js.Logger
 
-  constructor(readonly httpClient: Http) {
+  constructor(readonly httpClient: HttpClient) {
     this.logger = log4js.getLogger('Channel')
 
     const r$ = new ReplaySubject<ChMap>(1)

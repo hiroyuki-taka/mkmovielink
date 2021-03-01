@@ -7,7 +7,7 @@ import {Programs} from "./programs";
 import {Channels} from "./channels";
 import {Titles} from "./titles";
 import {isChItem, ProgItem, TargetFile, TitleItem} from "./types";
-import {Http} from "./http";
+import {HttpClient} from "./httpClient";
 import * as path from "path";
 import * as fs from 'fs';
 
@@ -43,7 +43,7 @@ class Mkmovielink extends Command {
     const storageRoot = flags.name ?? '/srv/movie/'
     const kanaStorageRoot = flags.destination ?? '/srv/movie_kana'
 
-    const httpClient = new Http()
+    const httpClient = new HttpClient()
     const programs = new Programs(httpClient)
     const channels = new Channels(httpClient)
     const titles = new Titles(httpClient)

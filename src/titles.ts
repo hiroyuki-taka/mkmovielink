@@ -3,7 +3,7 @@ import {map} from "rxjs/operators";
 import {xml2js} from "xml-js";
 import {DateTime, IANAZone} from "luxon";
 import {TID, TitleItem} from "./types";
-import {Http} from "./http";
+import {HttpClient} from "./httpClient";
 import * as log4js from "log4js";
 
 interface TextElement {
@@ -44,7 +44,7 @@ interface _Root {
 export class Titles {
   readonly logger: log4js.Logger
 
-  constructor(readonly httpClient: Http) {
+  constructor(readonly httpClient: HttpClient) {
     this.logger = log4js.getLogger('Titles')
   }
 

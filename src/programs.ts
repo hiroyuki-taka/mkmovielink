@@ -3,7 +3,7 @@ import {Observable} from "rxjs";
 import {map} from "rxjs/operators";
 import {DateTime} from "luxon";
 import {ProgItem, Query, QueryResult} from "./types";
-import {Http} from "./http";
+import {HttpClient} from "./httpClient";
 import * as log4js from "log4js";
 
 interface _ProgItem {
@@ -32,13 +32,66 @@ interface _Root {
   ProgLookupResponse: _ProgLookupResponse
 }
 
+interface _RootJson {
+  Programs: {
+    [key: string]: {
+      PID: string,
+      TID: string,
+      ChID: string,
+      ChName: string,
+      ChEPGURL: string,
+      Count: string,
+      StTime: string,
+      EdTime: string,
+      SubTitle2: string,
+      ProgComment: string
+      ConfFlag?: string
+    }
+  }
+}
 
 export class Programs {
   readonly logger: log4js.Logger
   private requestId = 0;
 
-  constructor(readonly httpClient: Http) {
+  constructor(readonly httpClient: HttpClient) {
     this.logger = log4js.getLogger('LocalFiles')
+  }
+
+  findJson(query: Query): Observable<QueryResult> {
+    const queryId = this.requestId++
+    this.logger.info(`reqId: ${queryId}, find: ${JSON.stringify(query)}`)
+
+    let date = query.start
+
+    const start = date.startOf('week')
+    const days = 7
+
+    return this.httpClient.request<_RootJson>(
+      'get',
+      `http://cal.syoboi.jp/json.php?Req=ProgramByDate&Start=${start.toFormat('yyyy-MM-dd')}&Days=14`)
+      .pipe(
+        map(response => {
+          this.logger.info(`reqId: ${queryId} receive ProgLookup response`)
+          const data = response.data
+
+          return <QueryResult>{
+            query: query,
+            programs: Object.entries(data.Programs).map(([_, p]) => {
+              return <ProgItem>{
+                id: Number(p.PID),
+                PID: p.PID,
+                TID: p.TID,
+                StTime: DateTime.fromSeconds(Number(p.StTime)),
+                EdTime: DateTime.fromSeconds(Number(p.EdTime)),
+                SubTitle2: p.SubTitle2,
+                ProgComment: p.ProgComment,
+                ConfFlag: p.ConfFlag
+              }
+            })
+          }
+        })
+      )
   }
 
   find(query: Query): Observable<QueryResult> {

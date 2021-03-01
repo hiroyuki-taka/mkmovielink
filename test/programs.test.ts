@@ -3,15 +3,17 @@ import {Channels} from "../src/channels";
 import {combineLatest} from "rxjs";
 import {DateTime} from "luxon";
 import {ChMap, QueryResult} from "../src/types";
+import {HttpClient} from "../src/httpClient";
 
 describe('programs', () => {
 
-  const programs = new Programs()
-  const channel = new Channels()
+  const httpClient = new HttpClient()
+  const programs = new Programs(httpClient)
+  const channel = new Channels(httpClient)
 
   it('20210113_000000', async () => {
     return new Promise((resolve, reject) => {
-      combineLatest([programs.find({
+      combineLatest([programs.findJson({
         channel: '23',
         start: DateTime.fromISO('2021-01-12T01:30:00+09')
       }), channel.asObservable])
@@ -19,6 +21,7 @@ describe('programs', () => {
           const mirakurunChId = queryResult.query.channel
           const targetChannel = chMap[mirakurunChId]
 
+          console.log(JSON.stringify(queryResult, undefined, 2))
           console.log('targetChannel', targetChannel)
           if (targetChannel === undefined || typeof targetChannel === 'string') {
             return

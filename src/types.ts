@@ -68,6 +68,9 @@ export interface ProgItem {
   Count?: number
   ChID: number
   SubTitle?: string
+  SubTitle2?: string
   STSubTitle?: string
+  ProgComment?: string
+  ConfFlag?: string
 }
 

@@ -2,7 +2,7 @@ import {interval, Observable, ReplaySubject, Subject, Subscription} from "rxjs";
 import axios, {AxiosInstance, AxiosResponse, AxiosTransformer, Method} from "axios";
 import * as log4js from "log4js";
 
-export class Http {
+export class HttpClient {
   readonly logger: log4js.Logger
   readonly requestCache: Map<string, Subject<AxiosResponse<any>>>
   readonly axiosInstance: AxiosInstance

@@ -8,12 +8,12 @@ import {Programs} from "./programs";
 import {Channels} from "./channels";
 import {Titles} from "./titles";
 import * as path from "path";
-import {Http} from "./http";
+import {HttpClient} from "./httpClient";
 
 export class MoveMovieFile {
 
   readonly logger: log4js.Logger
-  readonly httpClient: Http
+  readonly httpClient: HttpClient
   readonly localFiles: LocalFiles
   readonly programs: Programs
   readonly channels: Channels
@@ -22,7 +22,7 @@ export class MoveMovieFile {
   constructor() {
     this.logger = log4js.getLogger('MoveTargetFolder')
     this.localFiles = new LocalFiles()
-    this.httpClient = new Http()
+    this.httpClient = new HttpClient()
     this.programs = new Programs(this.httpClient)
     this.channels = new Channels(this.httpClient)
     this.titles = new Titles(this.httpClient)
