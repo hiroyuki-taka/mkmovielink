@@ -65,7 +65,6 @@ export class Programs {
     let date = query.start
 
     const start = date.startOf('week')
-    const days = 7
 
     return this.httpClient.request<_RootJson>(
       'get',

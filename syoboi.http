@@ -11,3 +11,6 @@ GET http://cal.syoboi.jp/db.php?Command=TitleLookup&TID=3163
 
 ###
 GET http://cal.syoboi.jp/db.php?Command=ProgLookup&JOIN=SubTitles&Range=20210215_000000-20210222_000000
+
+###
+GET http://192.168.0.170:40772/api/channels

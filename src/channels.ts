@@ -1,9 +1,10 @@
 import {combineLatest, Observable, ReplaySubject} from "rxjs";
 import {xml2js} from "xml-js";
 import {map} from "rxjs/operators";
-import * as log4js from 'log4js'
 import {HttpClient} from "./httpClient";
 import {ChItem, ChMap, MirakurunChID, MirakurunChName} from "./types";
+
+import * as log4js from 'log4js'
 
 interface TextNode {
   _text: string
@@ -78,21 +79,18 @@ export class Channels {
           switch (value.type) {
             case 'GR':
               // 半角へ変換
-              const name = value.name
-                .replace(/[\uff01-\uff5e]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xfee0))
+              const name = this.toHalfWidth(value.name)
               result[name] = value.channel
               break
             case 'BS':
               value.services.forEach(s => {
-                const name = s.name
-                  .replace(/[\uff01-\uff5e]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xfee0))
+                const name = this.toHalfWidth(s.name)
                 result[name] = value.channel
               })
               break
             case 'CS':
               value.services.forEach(s => {
-                const name = s.name
-                  .replace(/[\uff01-\uff5e]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xfee0))
+                const name = this.toHalfWidth(s.name)
                 if (name === 'AT-X' || name === 'BSアニマックス' || name === 'キッズステーション') {
                   result[name] = value.channel
                 }
@@ -133,5 +131,9 @@ export class Channels {
 
   get asObservable(): Observable<ChMap> {
     return this.channels$
+  }
+
+  toHalfWidth(s: string): string {
+    return s.replace(/[\uff01-\uff5e]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xfee0))
   }
 }
